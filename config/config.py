@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from errors.errors import ImproperlyConfigured, NoSuchResource
+from errors.errors import ImproperlyConfigured
 
 
 def get_env_variable(var_name: str, cast_to=str) -> str:
@@ -12,6 +12,7 @@ def get_env_variable(var_name: str, cast_to=str) -> str:
 
     Args:
         var_name: a name of a environment variable.
+        cast_to: a type for variable casting.
 
     Returns:
         A value of the environment variable.
@@ -28,35 +29,19 @@ def get_env_variable(var_name: str, cast_to=str) -> str:
 
 
 @dataclass
-class Redis:
-    location: str
-    db_num: int
-
-
-@dataclass
-class ResourceManager:
-    RESOURCES_PATH: str
-    resources: dict[str, str]
-
-    def get_path(self, resource_name: str) -> str:
-        try:
-            return os.path.join(
-                self.RESOURCES_PATH, self.resources[resource_name]
-            )
-        except KeyError:
-            raise NoSuchResource(resource_name)
-
-
-@dataclass
 class TelegramBot:
+    token: str
+
+
+@dataclass
+class OpenAI:
     token: str
 
 
 @dataclass
 class Config:
     tg_bot: TelegramBot
-    resource_manager: ResourceManager
-    redis: Redis
+    openai: OpenAI
 
 
 def load_config() -> Config:
@@ -69,21 +54,7 @@ def load_config() -> Config:
     # Telegram bot configuration
     tg_bot: TelegramBot = TelegramBot(token=get_env_variable("BOT_TOKEN"))
 
-    # Redis configuration
-    redis: Redis = Redis(
-        location=get_env_variable("REDIS_LOCATION"),
-        db_num=get_env_variable("REDIS_DB_NUM", int),
-    )
+    # OpenAI configuration
+    openai: OpenAI = OpenAI(token=get_env_variable("OPENAI_TOKEN"))
 
-    # Resource manager configuration
-    RESOURCES_PATH: str = os.path.join(BASE_DIR, "resources/")
-    resources: dict[str, str] = ...
-    resources_manager: ResourceManager = ResourceManager(
-        RESOURCES_PATH=RESOURCES_PATH, resources=resources
-    )
-
-    return Config(
-        tg_bot=tg_bot,
-        redis=redis,
-        resource_manager=resources_manager,
-    )
+    return Config(tg_bot=tg_bot, openai=openai)

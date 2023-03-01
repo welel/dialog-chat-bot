@@ -1,15 +1,23 @@
-from aiogram import Bot, F, Router
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import Command, CommandStart
-from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram import Router
+from aiogram.types import Message
 
-from errors import errors
+from models import (
+    Message as DialogMessage,
+    TelegramDialogManager,
+    DictDialogStorage,
+    OpenAIClient,
+)
 
 
 router: Router = Router()
+openai_client = OpenAIClient()
+storage = DictDialogStorage()
+dialog_manager = TelegramDialogManager(openai_client, storage)
 
 
-@router.message(CommandStart())
-async def process_start_command(message: Message):
-    ...
+@router.message()
+async def process_chat(message: Message):
+    answer: DialogMessage = dialog_manager.chat(
+        message.from_user.id, text=message.text
+    )
+    await message.reply(text=answer.text)
