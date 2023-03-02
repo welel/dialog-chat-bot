@@ -15,8 +15,60 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 
 # Installation
 
-...
+- Clone or donwload the repository.
 
-# Usage
+    ```
+    git clone git@github.com:welel/dialog-chat-bot.git
+    ```
 
-...
+- Checkout on **text-davinci-003** branch.
+
+    ```
+    git checkout text-davinci-003
+    ```
+
+- [Create virtual environment and activate it](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment) and [install dependencies](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#using-requirements-files).
+
+    ```
+    python -m venv env
+    source env/bin/activate
+    ```
+
+    ```
+    pip install -r requirements/local.txt
+    ```
+
+- Copy/rename `.env.dist` to `.env` and fill it with data.
+
+    ```
+    cp .env.dist .env
+    ```
+
+    - Set up a Telegram bot and obtain a bot token (see https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064 for instructions).
+
+    - Set up an OpenAI account and obtain an [API key](https://platform.openai.com/account/api-keys) (see https://beta.openai.com/docs/quickstart for instructions).
+
+- Run the bot.
+
+    ```
+    python bot.py
+    ```
+
+# Usage and configuration
+
+- To start interact with the bot send any message to the telegram bot.
+
+- To set a character and role for the bot and user user `.env` file.
+
+    ```js
+    # Chatbot
+        # Max length = 50
+    BOT_CHARACTER=Ilon Mask
+        # Max length = 50
+    USER_CHARACTER=Person
+        # Max length = 200
+    ROLE=Ilon Mask is having conversation with a Person.
+    ```
+
+    Set character name (role) for bot in a variable `BOT_CHARACTER` (for example: `Ilon Musk`, `Jonh Snow`, `King`, `Cat`...). Set character name for user the same way. And you can set a context for the conversation in a variable `ROLE` for exapmle: `Elon Musk passionately argues that there is life on Mars.`.
+
