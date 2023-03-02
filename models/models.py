@@ -21,9 +21,9 @@ class ContextDoesNotExist(Exception):
 class OpenAIClient(BaseOpenAIClient):
     config: OpenAI = load_config().openai
 
-    def complete(self, prompt: str, stop: str):
+    async def complete(self, prompt: str, stop: str):
         print(prompt)
-        return complete_text(
+        return await complete_text(
             prompt,
             stop,
             model=self.config.model,
@@ -39,12 +39,12 @@ class DictDialogStorage(DialogStorage):
 
     contexts: dict[int, Context] = dict()
 
-    def add_context(self, context: Context) -> int:
+    async def add_context(self, context: Context) -> int:
         """Adds a context to the storage and returns context id."""
         self.contexts[context.context_id] = context
         return context.context_id
 
-    def get_context(self, context_id) -> Context:
+    async def get_context(self, context_id) -> Context:
         """Gets a context from the storage and returns it."""
         try:
             return self.contexts[context_id]
@@ -60,15 +60,19 @@ class DictDialogStorage(DialogStorage):
 class TelegramDialogManager(DialogManager):
     config: ChatBot = load_config().chatbot
 
-    def chat(self, context_id: int, text: str) -> Message:
-        if self.dialog_storage.is_context(context_id):
-            return super().chat(context_id, text)
+    async def chat(self, user_id: int, text: str) -> Message:
+        """Gets answer from Open AI chatbot on `text` prompt.
+
+        Uses the telegram user id as a context identifier.
+        """
+        if self.dialog_storage.is_context(user_id):
+            return await super().chat(user_id, text)
         else:
-            user = User(user_id=context_id, name=self.config.user_character)
+            user = User(user_id=user_id, name=self.config.user_character)
             bot = Bot(
                 name=self.config.bot_character,
                 role=self.config.role,
             )
-            context = Context(context_id=context_id, user=user, bot=bot)
-            self.add_context(context)
-            return super().chat(context_id, text)
+            context = Context(context_id=user_id, user=user, bot=bot)
+            await self.add_context(context)
+            return await super().chat(user_id, text)

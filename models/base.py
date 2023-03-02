@@ -7,7 +7,7 @@ class BaseOpenAIClient(ABC):
     """Open AI interface that provides requests to OpenAI"""
 
     @abstractmethod
-    def complete(self, prompt: str, stop: str) -> str:
+    async def complete(self, prompt: str, stop: str) -> str:
         """Takes prompt and stop words and returns compelation."""
         raise NotImplementedError
 
@@ -153,7 +153,7 @@ class Context(BaseModel):
             bot_name=self.bot.name,
         )
 
-    def get_answer(self, openai_client: BaseOpenAIClient) -> Message:
+    async def get_answer(self, openai_client: BaseOpenAIClient) -> Message:
         """Requests OpenAI for an answer and add the answer to the `messages`.
 
         Generates a message from the OpenAI API in response to the current
@@ -172,7 +172,7 @@ class Context(BaseModel):
         """
         prompt = self._get_prompt()
         stop_word = self.user.name + ":"
-        answer_text = openai_client.complete(prompt, stop_word)
+        answer_text = await openai_client.complete(prompt, stop_word)
         self.add_message(self.bot, answer_text)
         return self.messages[-1]
 
@@ -187,12 +187,12 @@ class DialogStorage(ABC):
     """
 
     @abstractmethod
-    def add_context(self, context: Context) -> int:
+    async def add_context(self, context: Context) -> int:
         """Adds a context to the storage and returns context id."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_context(self, context_id) -> Context:
+    async def get_context(self, context_id) -> Context:
         """Gets a context from the storage and returns it."""
         raise NotImplementedError
 
@@ -205,12 +205,12 @@ class BaseDialogManager(ABC):
     """
 
     @abstractmethod
-    def add_context(self, context: Context) -> int:
+    async def add_context(self, context: Context) -> int:
         """Adds new context to the manager, returns context id."""
         raise NotImplementedError
 
     @abstractmethod
-    def chat(self, context_id: int, text: str) -> Message:
+    async def chat(self, context_id: int, text: str) -> Message:
         """Gets answer from Open AI chatbot on `text` prompt."""
         raise NotImplementedError
 
@@ -222,11 +222,11 @@ class DialogManager(BaseDialogManager):
         self.openai_client = openai_client
         self.dialog_storage = dialog_storage
 
-    def add_context(self, context: Context) -> int:
-        self.dialog_storage.add_context(context)
+    async def add_context(self, context: Context) -> int:
+        await self.dialog_storage.add_context(context)
 
-    def chat(self, context_id: int, text: str) -> Message:
+    async def chat(self, context_id: int, text: str) -> Message:
         """Gets answer from Open AI chatbot on `text` prompt."""
-        context = self.dialog_storage.get_context(context_id)
+        context = await self.dialog_storage.get_context(context_id)
         context.add_message(author=context.user, text=text)
-        return context.get_answer(self.openai_client)
+        return await context.get_answer(self.openai_client)

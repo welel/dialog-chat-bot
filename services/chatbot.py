@@ -44,7 +44,7 @@ def get_message(messages_key: str) -> str:
     return MESSAGES[messages_key][msg_index]
 
 
-def complete(
+async def complete(
     prompt: str,
     stop: str,
     model: str,
@@ -71,9 +71,8 @@ def complete(
     """
     if not prompt:
         return get_message("noinput")
-
     try:
-        response = openai.Completion.create(
+        response = await openai.Completion.acreate(
             model=model,
             prompt=prompt,
             temperature=temperature,

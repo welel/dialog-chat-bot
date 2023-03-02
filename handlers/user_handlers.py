@@ -15,7 +15,8 @@ dialog_manager = TelegramDialogManager(OpenAIClient(), DictDialogStorage())
 
 @router.message()
 async def process_chat(message: Message):
-    answer: DialogMessage = dialog_manager.chat(
+    """Gets any update and sends answer of an Open AI chatbot model."""
+    answer: DialogMessage = await dialog_manager.chat(
         message.from_user.id, text=message.text
     )
     await message.reply(text=answer.text)
