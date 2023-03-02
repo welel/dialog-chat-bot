@@ -10,9 +10,7 @@ from models import (
 
 
 router: Router = Router()
-openai_client = OpenAIClient()
-storage = DictDialogStorage()
-dialog_manager = TelegramDialogManager(openai_client, storage)
+dialog_manager = TelegramDialogManager(OpenAIClient(), DictDialogStorage())
 
 
 @router.message()

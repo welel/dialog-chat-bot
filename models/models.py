@@ -1,3 +1,4 @@
+from config import ChatBot, load_config, OpenAI
 from services.chatbot import complete as complete_text
 
 from .base import (
@@ -11,17 +12,31 @@ from .base import (
 )
 
 
-class OpenAIClient(BaseOpenAIClient):
-    def complete(self, prompt: str, stop: str):
-        print(prompt)
-        return complete_text(prompt, stop)
-
-
 class ContextDoesNotExist(Exception):
     """Raises when a context is missing in a storage."""
 
+    pass
+
+
+class OpenAIClient(BaseOpenAIClient):
+    config: OpenAI = load_config().openai
+
+    def complete(self, prompt: str, stop: str):
+        print(prompt)
+        return complete_text(
+            prompt,
+            stop,
+            model=self.config.model,
+            temperature=self.config.temperature,
+            max_tokens=self.config.max_tokens,
+            frequency_penalty=self.config.frequency_penalty,
+            presence_penalty=self.config.presence_penalty,
+        )
+
 
 class DictDialogStorage(DialogStorage):
+    """Dialog Storage that stores context in Python dict."""
+
     contexts: dict[int, Context] = dict()
 
     def add_context(self, context: Context) -> int:
@@ -43,14 +58,16 @@ class DictDialogStorage(DialogStorage):
 
 
 class TelegramDialogManager(DialogManager):
+    config: ChatBot = load_config().chatbot
+
     def chat(self, context_id: int, text: str) -> Message:
         if self.dialog_storage.is_context(context_id):
             return super().chat(context_id, text)
         else:
-            user = User(user_id=context_id, name="Король")
+            user = User(user_id=context_id, name=self.config.user_character)
             bot = Bot(
-                name="Илон Маск",
-                role="Илон Маск беседует с разработчиком.",
+                name=self.config.bot_character,
+                role=self.config.role,
             )
             context = Context(context_id=context_id, user=user, bot=bot)
             self.add_context(context)

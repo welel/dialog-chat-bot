@@ -1,31 +1,10 @@
 from dataclasses import dataclass
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
-from errors.errors import ImproperlyConfigured
-
-
-def get_env_variable(var_name: str, cast_to=str) -> str:
-    """Get an environment variable or raise an exception.
-
-    Args:
-        var_name: a name of a environment variable.
-        cast_to: a type for variable casting.
-
-    Returns:
-        A value of the environment variable.
-
-    Raises:
-        ImproperlyConfigured: if the environment variable is not set.
-    """
-    try:
-        return cast_to(os.environ[var_name])
-    except KeyError:
-        raise ImproperlyConfigured(var_name)
-    except ValueError:
-        raise ValueError("Bad environment variable casting.")
+from .helpers import get_env_variable
 
 
 @dataclass
@@ -33,15 +12,55 @@ class TelegramBot:
     token: str
 
 
-@dataclass
-class OpenAI:
+class OpenAI(BaseModel):
+    """OpenAI client configuration.
+
+    Uses the model - "text-davinci-003". More about parameters in docs.
+    Docs: https://platform.openai.com/docs/api-reference/completions/create
+
+    Attrs:
+        token: The OpenAI API key to use for authentication.
+        model: The GPT model to use. Defaults to "text-davinci-003".
+        max_tokens: The maximum number of tokens to generate in the completion.
+        temperature: A value controlling the randomness of the generated text.
+        stop: If provided, the model will stop generating text when any of
+            the strings in the list are encountered in the completion.
+        presence_penalty: A value controlling how much the model favors
+            words that were present in the input text.
+        frequency_penalty: A value controlling how much the model favors
+            rare words.
+
+    """
+
     token: str
+    model: str = "text-davinci-003"
+    max_tokens: int = Field(lt=4048)
+    temperature: float = Field(ge=0.0, le=2.0)
+    stop: list[str] | str | None = Field(None, max_items=4)
+    presence_penalty: float = Field(ge=-2.0, le=2.0)
+    frequency_penalty: float = Field(ge=-2.0, le=2.0)
+
+
+@dataclass
+class ChatBot:
+    """Chatbot configuration.
+
+    Attrs:
+        bot_character: The character being played by the AI.
+        user_character: The user name or character.
+        role: the context of the conversation.
+    """
+
+    bot_character: str
+    user_character: str
+    role: str
 
 
 @dataclass
 class Config:
     tg_bot: TelegramBot
     openai: OpenAI
+    chatbot: ChatBot
 
 
 def load_config() -> Config:
@@ -55,6 +74,18 @@ def load_config() -> Config:
     tg_bot: TelegramBot = TelegramBot(token=get_env_variable("BOT_TOKEN"))
 
     # OpenAI configuration
-    openai: OpenAI = OpenAI(token=get_env_variable("OPENAI_TOKEN"))
+    openai: OpenAI = OpenAI(
+        token=get_env_variable("OPENAI_TOKEN"),
+        temperature=get_env_variable("TEMPERATURE", float),
+        max_tokens=get_env_variable("MAX_TOKENS", int),
+        frequency_penalty=get_env_variable("FREQUENCY_PENALTY", float),
+        presence_penalty=get_env_variable("PRESENCE_PENALTY", float),
+    )
 
-    return Config(tg_bot=tg_bot, openai=openai)
+    chatbot: ChatBot = ChatBot(
+        bot_character=get_env_variable("BOT_CHARACTER"),
+        user_character=get_env_variable("USER_CHARACTER"),
+        role=get_env_variable("ROLE"),
+    )
+
+    return Config(tg_bot=tg_bot, openai=openai, chatbot=chatbot)
