@@ -1,5 +1,7 @@
 # Context Aware Telegram Chatbot
 
+<a href="/README-ru.md" ><img alt="ru" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-%D0%BD%D0%B0%20%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%BE%D0%BC-blue"/></a>
+
 This is a Python-based chatbot that uses the OpenAI API with the **text-davinci-003** model to provide conversational responses to users in a dialog context-aware manner.
 
 The **text-davinci-003** model is designed for text completion, not dialogue management. This project implements a system that allows for the use of the **text-davinci-003** model for dialogue management. The system treats messages as separate entities, assigns them an author, and stores messages from a single conversation in a container called a context. The context can generate text for the model prompt based on the stored dialogue messages in a format that the model can understand, allowing for dialogue to be conducted in a model that only accepts requests as indivisible text.
@@ -98,7 +100,7 @@ ROLE=Neil Armstrong is having conversation with a person.
 Neil Armstrong is having conversation with a person.
 
 **Person:** Hello, my name is Bill.<br>
-N**eil Armstrong:** Hi Bill, I'm Neil Armstrong. It's nice to meet you.<br>
+**Neil Armstrong:** Hi Bill, I'm Neil Armstrong. It's nice to meet you.<br>
 **Person:** What was it like to be the first human being to set foot on the moon?<br>
 **Neil Armstrong:** It was an amazing experience. It was a unique opportunity to be part of something so historic and to witness the beauty of the Earth from a different perspective.<br>
 **Person:** How did you and your fellow astronauts prepare for the Apollo 11 mission?<br>
