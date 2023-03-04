@@ -85,3 +85,10 @@ async def complete(
         print(error)
         return get_message("nobother")
     return response["choices"][0]["text"].strip()
+
+
+async def audio_to_text(file_path: str) -> str:
+    """Gets audio file path and returns transcribed text."""
+    with open(file_path, "rb") as audio_file:
+        transcript = await openai.Audio.atranscribe("whisper-1", audio_file)
+        return transcript["text"]

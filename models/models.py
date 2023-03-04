@@ -1,5 +1,5 @@
 from config import ChatBot, load_config, OpenAI
-from services.chatbot import complete as complete_text
+from services.openai_api import complete as complete_text
 
 from .base import (
     BaseOpenAIClient,
