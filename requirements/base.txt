@@ -12,6 +12,7 @@ magic-filter==1.0.9
 multidict==6.0.4
 openai==0.27.0
 pydantic==1.10.5
+pydub==0.25.1
 python-dotenv==1.0.0
 requests==2.28.2
 tqdm==4.64.1

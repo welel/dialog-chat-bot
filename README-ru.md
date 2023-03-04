@@ -21,8 +21,9 @@
 - Linux
 - Python 3.10+
 - aiogram 3+
-- openai
+- openai 0.27.0
 - dotenv
+- pydub 0.25.1
 
 # 🏗️ Развертывание
 
@@ -55,9 +56,9 @@
     cp .env.dist .env
     ```
 
-    - Создание Telegram и получение токена (инструкция - https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064).
+    - Создание Telegram бота и получение токена (инструкция - https://medium.com/geekculture/generate-telegram-token-for-bot-api-d26faf9bf064).
 
-    - Регистрируйтесь на OpenAI и получайте токен [API key](https://platform.openai.com/account/api-keys) (инструкция - https://medium.com/@pavel.loginov.dev/%D0%BF%D0%BE%D0%B4%D0%BA%D0%BB%D1%8E%D1%87%D0%B0%D0%B5%D0%BC-openai-%D0%BA-telegram-bot-533d1823cbdc).
+    - Регистрируйтесь на OpenAI и получайте токен [API key](https://platform.openai.com/account/api-keys) (инструкция - https://medium.com/@pavel.loginov.dev/подключаем-openai-к-telegram-bot-533d1823cbdc).
 
 - Запускайте бота.
 

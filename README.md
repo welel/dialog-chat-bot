@@ -23,8 +23,9 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 - Linux
 - Python 3.10+
 - aiogram 3+
-- openai
+- openai 0.27.0
 - dotenv
+- pydub 0.25.1
 
 # 🏗️ Installation
 
