@@ -16,6 +16,7 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 - Ability to set a character for both the bot and the user.
 - Can handle multiple conversations with different users simultaneously.
 - Saves conversation histories to a storage for future reference.
+- Supports voice input (processes to text and sends to the model).
 
 # 🛠️ Requirements
 
