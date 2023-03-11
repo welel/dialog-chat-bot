@@ -69,10 +69,7 @@ class TelegramDialogManager(DialogManager):
             return await super().chat(user_id, text)
         else:
             user = User(user_id=user_id, name=self.config.user_character)
-            bot = Bot(
-                name=self.config.bot_character,
-                role=self.config.role,
-            )
+            bot = Bot(name=self.config.bot_character, role=self.config.role)
             context = Context(context_id=user_id, user=user, bot=bot)
             await self.add_context(context)
             return await super().chat(user_id, text)
