@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+import os
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -61,6 +62,7 @@ class Config:
     tg_bot: TelegramBot
     openai: OpenAI
     chatbot: ChatBot
+    VOICES_DIRECTORY: str
 
 
 def load_config() -> Config:
@@ -88,4 +90,13 @@ def load_config() -> Config:
         role=get_env_variable("ROLE"),
     )
 
-    return Config(tg_bot=tg_bot, openai=openai, chatbot=chatbot)
+    VOICES_DIRECTORY: str = os.path.join(BASE_DIR, "voice_files")
+    if not os.path.isdir(VOICES_DIRECTORY):
+        os.mkdir(VOICES_DIRECTORY)
+
+    return Config(
+        tg_bot=tg_bot,
+        openai=openai,
+        chatbot=chatbot,
+        VOICES_DIRECTORY=VOICES_DIRECTORY,
+    )

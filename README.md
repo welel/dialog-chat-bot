@@ -26,6 +26,7 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 - openai 0.27.0
 - dotenv
 - pydub 0.25.1
+- ffmpeg
 
 # 🏗️ Installation
 
@@ -50,6 +51,12 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 
     ```
     pip install -r requirements/local.txt
+    ```
+
+- To use voice messages, please ffmpeg.
+
+    ```
+    sudo apt install ffmpeg
     ```
 
 - Copy/rename `.env.dist` to `.env` and fill it with data.
