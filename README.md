@@ -53,7 +53,7 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
     pip install -r requirements/local.txt
     ```
 
-- To use voice messages, please ffmpeg.
+- To use voice messages, please install ffmpeg.
 
     ```
     sudo apt install ffmpeg
@@ -79,7 +79,7 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
 
 - To start interact with the bot send any message to the telegram bot.
 
-- To set a character and role for the bot and user user `.env` file.
+- To set a character and a role for the bot and the user use `.env` file.
 
     ```js
     # Chatbot
@@ -91,7 +91,7 @@ It is designed to work with the Telegram messaging platform and uses the **aiogr
     ROLE=Ilon Mask is having conversation with a Person.
     ```
 
-    Set character name (role) for bot in a variable `BOT_CHARACTER` (for example: `Ilon Musk`, `Jonh Snow`, `King`, `Cat`...). Set character name for user the same way. And you can set a context for the conversation in a variable `ROLE` for exapmle: `Elon Musk passionately argues that there is life on Mars.`.
+    Set a character name (role) for the bot in a variable `BOT_CHARACTER` (for example: `Ilon Musk`, `Jonh Snow`, `King`, `Cat`...). Set the character name for the user the same way. And you can set a context for the conversation in a variable `ROLE` for exapmle: `Elon Musk passionately argues that there is life on Mars.`.
 
 # 💬 Example of a conversation
 
@@ -110,7 +110,7 @@ Neil Armstrong is having conversation with a person.
 
 **Person:** Hello, my name is Bill.<br>
 **Neil Armstrong:** Hi Bill, I'm Neil Armstrong. It's nice to meet you.<br>
-**Person:** What was it like to be the first human being to set foot on the moon?<br>
+**Person:** What was it like to be the first human being to set foot on the Moon?<br>
 **Neil Armstrong:** It was an amazing experience. It was a unique opportunity to be part of something so historic and to witness the beauty of the Earth from a different perspective.<br>
 **Person:** How did you and your fellow astronauts prepare for the Apollo 11 mission?<br>
 **Neil Armstrong:** We spent a lot of time training in the simulator, studying the mission objectives, and practicing emergency procedures. We also had to stay physically fit to handle the rigors of space travel.<br>
