@@ -12,21 +12,21 @@ client = AsyncOpenAI(api_key=config.openai.token)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-MESSAGES = {
-    "on_error": [
-        "Сегодня я не в настроении болтать. Пожалуйста, не раздражайте меня!",
-        "Сегодня я не хочу ничего рассказывать. Не трогайте меня!",
-        "Сегодня я ничему не рад. Никого не слушаю!",
-        "Скорость, скорость - это моя философия! Никому ничему!",
-        "Я - занят своими думами! Нельзя, чтобы кто-нибудь мешал мне!",
-        "Я - свободный! Когда не хочу отвечать - не отвечаю!",
+MESSAGES: dict[str, list[str]] = {
+    "nobother": [
+        "Today, I'm not in the mood for chatting. Please, don't bother me!",
+        "Today, I don't feel like sharing anything. Leave me be!",
+        "Today, nothing pleases me. I'm not listening to anyone!",
+        "Speed, speed - that's my philosophy! No lessons, no listening!",
+        "I'm occupied with my thoughts! Nobody should disturb me!",
+        "I am free! When I don't want to respond, I won't!",
     ],
     "noinput": [
-        "Ты должен что-то сказать, иначе мы не сможем продолжить разговор.",
-        "Ты должен что-то ввести, иначе разговор не случится.",
-        "Ты должен что-то сказать, иначе разговору нельзя будет уделить внимания.",
-        "Ты должен что-то сказать, чтобы развивался разговор.",
-        "Ты должен хоть что-нибудь сказать.",
+        "You need to say something, or we can't continue our conversation.",
+        "You need to input something, otherwise, there can be no dialogue.",
+        "You need to say something, or the chat can't be given attention.",
+        "You need to say something to keep the conversation going.",
+        "You have to say at least something.",
     ],
 }
 
@@ -40,13 +40,11 @@ def get_message(messages_key: str) -> str:
 
     Returns:
         str: A random message from the MESSAGES dictionary corresponding to
-             the given key.
-
-    Raises:
-        KeyError: If the given key is not present in the MESSAGES dictionary.
+             the given key. If a key or messages don't exists, returns "".
     """
-    msg_index = rand.randint(0, len(MESSAGES[messages_key]) - 1)
-    return MESSAGES[messages_key][msg_index]
+    messages = MESSAGES.get(messages_key, [""])
+    message_index = rand.randint(0, len(messages) - 1)
+    return messages[message_index]
 
 
 async def complete(
