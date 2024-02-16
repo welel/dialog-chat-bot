@@ -16,12 +16,12 @@ class TelegramBot:
 class OpenAI(BaseModel):
     """OpenAI client configuration.
 
-    Uses the model - "text-davinci-003". More about parameters in docs.
-    Docs: https://platform.openai.com/docs/api-reference/completions/create
+    Uses the model - "gpt-3.5-turbo". More about parameters in docs.
+    Docs: https://platform.openai.com/docs/api-reference/chat/create
 
     Attrs:
         token: The OpenAI API key to use for authentication.
-        model: The GPT model to use. Defaults to "text-davinci-003".
+        model: The GPT model to use. Defaults to "gpt-3.5-turbo".
         max_tokens: The maximum number of tokens to generate in the completion.
         temperature: A value controlling the randomness of the generated text.
         stop: If provided, the model will stop generating text when any of
@@ -34,7 +34,7 @@ class OpenAI(BaseModel):
     """
 
     token: str
-    model: str = "text-davinci-003"
+    model: str = "gpt-3.5-turbo"
     max_tokens: int = Field(lt=4048)
     temperature: float = Field(ge=0.0, le=2.0)
     stop: list[str] | str | None = Field(None, max_items=4)
@@ -78,10 +78,10 @@ def load_config() -> Config:
     # OpenAI configuration
     openai: OpenAI = OpenAI(
         token=get_env_variable("OPENAI_TOKEN"),
-        temperature=get_env_variable("TEMPERATURE", float),
-        max_tokens=get_env_variable("MAX_TOKENS", int),
-        frequency_penalty=get_env_variable("FREQUENCY_PENALTY", float),
-        presence_penalty=get_env_variable("PRESENCE_PENALTY", float),
+        temperature=get_env_variable("CHAT_TEMPERATURE", float),
+        max_tokens=get_env_variable("CHAT_MAX_TOKENS", int),
+        frequency_penalty=get_env_variable("CHAT_FREQUENCY_PENALTY", float),
+        presence_penalty=get_env_variable("CHAT_PRESENCE_PENALTY", float),
     )
 
     chatbot: ChatBot = ChatBot(
