@@ -7,7 +7,8 @@ from openai import AsyncOpenAI
 from config import load_config
 
 
-client = AsyncOpenAI(api_key=load_config().openai.token)
+config = load_config()
+client = AsyncOpenAI(api_key=config.openai.token)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -92,7 +93,10 @@ async def complete(
         logger.exception(
             "Error while completion: %s. Messages: %s", e, messages
         )
-        return get_message("on_error")
+        if config.tg_bot.debug_mode:
+            return str(f"Error while completion: {e}")
+        else:
+            return get_message("on_error")
     message = completion.choices[0].message.content or ""
     return message.strip()
 
@@ -107,8 +111,14 @@ async def audio_to_text(file_path: str) -> str:
     Returns:
         The transcription text of the audio file.
     """
-    with open(file_path, "rb") as audio_file:
-        transcript = await client.audio.transcriptions.create(
-            model="whisper-1", file=audio_file
-        )
-        return transcript["text"]
+    try:
+        with open(file_path, "rb") as audio_file:
+            transcript = await client.audio.transcriptions.create(
+                model="whisper-1", file=audio_file
+            )
+            return transcript["text"]
+    except Exception as e:
+        if config.tg_bot.debug_mode:
+            return str(f"Error while transcripting: {e}")
+        else:
+            raise

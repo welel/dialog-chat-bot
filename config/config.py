@@ -11,6 +11,7 @@ from .helpers import get_env_variable
 @dataclass
 class TelegramBot:
     token: str
+    debug_mode: bool = False
 
 
 class OpenAI(BaseModel):
@@ -73,7 +74,10 @@ def load_config() -> Config:
     BASE_DIR: str = Path(__file__).resolve().parent.parent
 
     # Telegram bot configuration
-    tg_bot: TelegramBot = TelegramBot(token=get_env_variable("BOT_TOKEN"))
+    tg_bot: TelegramBot = TelegramBot(
+        token=get_env_variable("BOT_TOKEN"),
+        debug_mode=get_env_variable("DEBUG") == "1",
+    )
 
     # OpenAI configuration
     openai: OpenAI = OpenAI(
