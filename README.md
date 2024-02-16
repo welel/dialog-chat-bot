@@ -1,3 +1,9 @@
+## Important Notice: Deprecation of `text-davinci-003` branch
+
+> The `text-davinci-003` model, utilized in this Telegram bot, has been deprecated in the OpenAI API. This change has resulted in the unavailability of the bot's services. [More details.](https://platform.openai.com/docs/deprecations)
+
+---
+
 # Context Aware Telegram Chatbot
 
 <a href="/README-ru.md" ><img alt="ru" src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F-%D0%BD%D0%B0%20%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%BE%D0%BC-blue"/></a>
