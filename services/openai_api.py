@@ -1,8 +1,10 @@
 """A module provides a function to complete a prompt with OpenAI's model."""
 import logging
 import random as rand
+from typing import Iterable
 
 from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
 
 from config import load_config
 
@@ -48,13 +50,13 @@ def get_message(messages_key: str) -> str:
 
 
 async def complete(
-    messages: dict[str, str],
-    model: str,
-    frequency_penalty: float,
-    max_tokens: int,
-    presence_penalty: float,
-    stop: str,
-    temperature: str,
+    messages: Iterable[ChatCompletionMessageParam],
+    model: str = "gpt-3.5-turbo",
+    frequency_penalty: float | None = None,
+    max_tokens: int | None = None,
+    presence_penalty: float | None = None,
+    stop: str | None = None,
+    temperature: str | None = None,
 ) -> str:
     """Completes the given prompt using OpenAI's language model.
 
