@@ -1,3 +1,5 @@
+import logging
+
 import tiktoken
 
 from config import configs
@@ -10,6 +12,7 @@ from .base import BaseChat, BaseDialogManager, DialogStorage, Role, Message
 
 chat_model = configs.chat_model
 encoder = tiktoken.encoding_for_model(chat_model.model)
+logger = logging.getLogger(__name__)
 
 
 class Chat(BaseChat):
@@ -91,6 +94,7 @@ class Chat(BaseChat):
         """
         self.add_message(text, Role.USER)
         await self._get_prompt()
+        logger.debug("Chat state: %s", self)
         return self.messages[-1].content
 
 

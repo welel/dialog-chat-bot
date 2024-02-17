@@ -57,4 +57,5 @@ async def audio_to_text(file_path: str, delete_file: bool = True) -> str:
     if delete_file:
         os.remove(file_path)
 
+    logger.debug("Transcribed text: %s", transcript.text)
     return transcript.text

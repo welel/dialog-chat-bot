@@ -12,8 +12,12 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
+    if configs.tg_bot.debug_mode:
+        logging_level = logging.DEBUG
+    else:
+        logging_level = logging.INFO
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging_level,
         format="%(filename)s:%(lineno)d #%(levelname)-8s "
         "[%(asctime)s] - %(name)s - %(message)s",
     )
