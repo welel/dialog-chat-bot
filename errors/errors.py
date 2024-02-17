@@ -5,3 +5,7 @@ class ImproperlyConfigured(Exception):
         self.variable_name = variable_name
         self.message = f"Set the {variable_name} environment variable."
         super().__init__(self.message, *args, **kwargs)
+
+
+class ChatDoesNotExist(Exception):
+    """Raises when a chat is missing in a storage."""

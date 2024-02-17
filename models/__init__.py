@@ -1,2 +1,2 @@
-from .base import Message
-from .models import TelegramDialogManager, DictDialogStorage
+from .base import Message  # noqa: F401
+from .models import TelegramDialogManager, DictDialogStorage  # noqa: F401
