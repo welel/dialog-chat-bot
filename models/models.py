@@ -101,7 +101,7 @@ class Chat(BaseChat):
 class DictDialogStorage(DialogStorage):
     """Dialog Storage that stores context in Python dict."""
 
-    chats: dict[int, Chat] = dict()
+    chats: dict[tuple[int, int], Chat] = dict()
 
     async def add_chat(self, chat: Chat):
         """Adds a chat to the storage."""
