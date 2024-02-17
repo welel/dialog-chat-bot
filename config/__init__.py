@@ -1,1 +1,2 @@
-from .config import Config, ChatBot, OpenAI, load_config
+from .config import Config, ChatModel, load_config  # noqa: F401
+configs = load_config()

@@ -1,4 +1,3 @@
-from config import ChatBot, load_config
 from config.config import MAX_TELEGRAM_MESSAGE_LEN
 
 from .base import DialogStorage, DialogManager, Chat
@@ -33,7 +32,6 @@ class DictDialogStorage(DialogStorage):
 
 
 class TelegramDialogManager(DialogManager):
-    config: ChatBot = load_config().chatbot
     dialog_storage: DictDialogStorage
 
     async def chat(self, user_id: int, chat_id: int, text: str) -> str:

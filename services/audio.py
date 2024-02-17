@@ -5,10 +5,7 @@ from aiogram import Bot
 from aiogram.types import Voice
 from pydub import AudioSegment
 
-from config import load_config
-
-
-config = load_config()
+from config import configs
 
 
 async def save_voice_as_mp3(bot: Bot, voice: Voice) -> str:
@@ -17,7 +14,7 @@ async def save_voice_as_mp3(bot: Bot, voice: Voice) -> str:
     voice_ogg = io.BytesIO()
     await bot.download_file(voice_file_info.file_path, voice_ogg)
     voice_mp3_path = os.path.join(
-        config.VOICES_DIRECTORY, f"voice-{voice.file_unique_id}.mp3"
+        configs.VOICES_DIRECTORY, f"voice-{voice.file_unique_id}.mp3"
     )
     AudioSegment.from_file(voice_ogg, format="ogg").export(
         voice_mp3_path, format="mp3"

@@ -3,7 +3,7 @@ import logging
 
 from aiogram import Bot, Dispatcher
 
-from config import Config, load_config
+from config import configs
 from handlers import user_handlers
 
 
@@ -19,9 +19,7 @@ async def main():
 
     logger.info("Starting bot")
 
-    config: Config = load_config()
-
-    bot: Bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
+    bot: Bot = Bot(token=configs.tg_bot.token, parse_mode="HTML")
     dp: Dispatcher = Dispatcher()
 
     dp.include_router(user_handlers.router)

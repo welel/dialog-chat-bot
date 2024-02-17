@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from config import Config, load_config
+from config import configs
 
 from pydantic import BaseModel, Field
 
@@ -10,8 +10,8 @@ import tiktoken
 from services.openai_api import complete
 
 
-config: Config = load_config()
-encoder = tiktoken.encoding_for_model(config.openai.model)
+chat_model = configs.chat_model
+encoder = tiktoken.encoding_for_model(chat_model.model)
 
 
 class Role(str, Enum):
@@ -42,7 +42,7 @@ class Chat(BaseModel):
     user_id: int
     chat_id: int
     messages: list[Message] = Field(default_factory=list)
-    max_tokens: int = Field(config.openai.max_tokens, gt=300, lt=4000)
+    max_tokens: int = chat_model.max_tokens
 
     def add_message(self, text: str, role: Role = Role.USER):
         """Add a message to the chat.
@@ -57,19 +57,13 @@ class Chat(BaseModel):
 
     def model_post_init(self, __context) -> None:
         """Initializes the context with the chatbot description."""
-        self.add_message(config.chatbot.description, Role.SYSTEM)
-
-    @staticmethod
-    def _get_num_tokens_from_string(string: str) -> int:
-        """Returns the number of tokens in a text string."""
-        return len(encoder.encode(string))
+        self.add_message(chat_model.chatbot_description, Role.SYSTEM)
 
     @classmethod
     def _get_message_tokens_num(cls, message: Message) -> int:
         """Returns the number of tokens in a message."""
-        tokens = cls._get_num_tokens_from_string(
-            f"{message.content}{message.role}"
-        )
+        message_as_str = f"{message.content}{message.role}"
+        tokens = len(encoder.encode(message_as_str))
         tokens += 3  # Every reply is primed with <|start|>role<|message|>
         return tokens
 
@@ -104,7 +98,7 @@ class Chat(BaseModel):
         Returns:
             A string representing the prompt message for the current context.
         """
-        answer = await complete(self.messages)
+        answer = await complete(self.messages, chat_model)
         self.add_message(answer, Role.ASSISTANT)
 
     async def get_answer(self, text: str) -> str:
