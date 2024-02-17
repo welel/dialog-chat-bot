@@ -1,75 +1,50 @@
-from config import ChatBot, load_config, OpenAI
-from services.openai_api import complete as complete_text
+from config import ChatBot, load_config
+from config.config import MAX_TELEGRAM_MESSAGE_LEN
 
-from .base import (
-    BaseOpenAIClient,
-    Bot,
-    Context,
-    DialogStorage,
-    DialogManager,
-    Message,
-    User,
-)
+from .base import DialogStorage, DialogManager, Chat
 
 
-class ContextDoesNotExist(Exception):
-    """Raises when a context is missing in a storage."""
+class ChatDoesNotExist(Exception):
+    """Raises when a chat is missing in a storage."""
 
     pass
-
-
-class OpenAIClient(BaseOpenAIClient):
-    config: OpenAI = load_config().openai
-
-    async def complete(self, prompt: str, stop: str):
-        print(prompt)
-        return await complete_text(
-            prompt,
-            stop,
-            model=self.config.model,
-            temperature=self.config.temperature,
-            max_tokens=self.config.max_tokens,
-            frequency_penalty=self.config.frequency_penalty,
-            presence_penalty=self.config.presence_penalty,
-        )
 
 
 class DictDialogStorage(DialogStorage):
     """Dialog Storage that stores context in Python dict."""
 
-    contexts: dict[int, Context] = dict()
+    chats: dict[int, Chat] = dict()
 
-    async def add_context(self, context: Context) -> int:
-        """Adds a context to the storage and returns context id."""
-        self.contexts[context.context_id] = context
-        return context.context_id
+    async def add_chat(self, chat: Chat):
+        """Adds a chat to the storage."""
+        self.chats[(chat.user_id, chat.chat_id)] = chat
 
-    async def get_context(self, context_id) -> Context:
-        """Gets a context from the storage and returns it."""
+    async def get_chat(self, user_id: int, chat_id: int) -> Chat:
+        """Gets a chat from the storage and returns it."""
         try:
-            return self.contexts[context_id]
+            return self.chats[(user_id, chat_id)]
         except KeyError:
-            raise ContextDoesNotExist(
-                f"Context with id {context_id} doesn't exist."
+            raise ChatDoesNotExist(
+                f"Chat for {(user_id, chat_id)} doesn't exist.",
             )
 
-    def is_context(self, context_id: int) -> bool:
-        return context_id in self.contexts
+    def is_chat(self, user_id: int, chat_id: int) -> bool:
+        return (user_id, chat_id) in self.chats
 
 
 class TelegramDialogManager(DialogManager):
     config: ChatBot = load_config().chatbot
+    dialog_storage: DictDialogStorage
 
-    async def chat(self, user_id: int, text: str) -> Message:
+    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
         """Gets answer from Open AI chatbot on `text` prompt.
 
-        Uses the telegram user id as a context identifier.
+        Uses the telegram user_id, chat_id as a chat identifier.
         """
-        if self.dialog_storage.is_context(user_id):
-            return await super().chat(user_id, text)
+        if self.dialog_storage.is_chat(user_id, chat_id):
+            answer = await super().chat(user_id, chat_id, text)
         else:
-            user = User(user_id=user_id, name=self.config.user_character)
-            bot = Bot(name=self.config.bot_character, role=self.config.role)
-            context = Context(context_id=user_id, user=user, bot=bot)
-            await self.add_context(context)
-            return await super().chat(user_id, text)
+            chat = Chat(user_id=user_id, chat_id=chat_id)
+            await self.add_chat(chat)
+            answer = await super().chat(user_id, chat_id, text)
+        return answer[:MAX_TELEGRAM_MESSAGE_LEN - 1]

@@ -1,198 +1,145 @@
 from abc import ABC, abstractmethod
+from enum import Enum
+
+from config import Config, load_config
 
 from pydantic import BaseModel, Field
 
+import tiktoken
 
-class BaseOpenAIClient(ABC):
-    """Open AI interface that provides requests to OpenAI"""
-
-    @abstractmethod
-    async def complete(self, prompt: str, stop: str) -> str:
-        """Takes prompt and stop words and returns compelation."""
-        raise NotImplementedError
+from services.openai_api import complete
 
 
-class Bot(BaseModel):
-    """Bot character that a OpenAI model represents.
-
-    Attrs:
-        name: A bot's name.
-        role: A context of conversation.
-    """
-
-    name: str = Field(..., max_length=50)
-    role: str = Field("", max_length=200)
+config: Config = load_config()
+encoder = tiktoken.encoding_for_model(config.openai.model)
 
 
-class User(BaseModel):
-    """User character."""
-
-    user_id: int
-    name: str = Field(..., max_length=50)
+class Role(str, Enum):
+    USER = "user"
+    SYSTEM = "system"
+    ASSISTANT = "assistant"
 
 
 class Message(BaseModel):
-    message_id: int
-    author: User | Bot
-    text: str = Field(..., max_length=1995)
-
-    def __len__(self) -> int:
-        """Length of a message: text + author name + sequence ' : '."""
-        return len(self.author.name) + len(self.text) + 3
+    content: str
+    role: Role
 
 
-class Context(BaseModel):
-    """Dialog context of one user and a bot.
+class Chat(BaseModel):
+    """Chat of one user and a chatbot.
 
-    Context keeps the messages history. If length of all messages exceeds
-    `max_length` context trims (deletes) oldest messages to keep sum length
-    less than `max_length`.
+    Chat manages the messages history and makes request to OpenAI.
 
     Attrs:
-        context_id: An integer representing the unique ID of the conversation.
-        user: A User object representing the user participating
-            in the conversation.
-        bot: A Bot object representing the bot participating
-            in the conversation.
-        messages: A list of Message objects representing
-            the conversation history.
-        max_length: An integer representing the maximum number of characters
+        user_id: Telegram user ID.
+        chat_id: Telegram chat ID.
+        messages: A list of Message objects representing the conversation
+            history.
+        max_tokens: An integer representing the maximum number of tokens
             allowed in sum of all messages.
     """
 
-    context_id: int
-    user: User
-    bot: Bot
-    messages: list[Message] = list()
-    max_length: int = Field(1900, gt=300, lt=2048)
+    user_id: int
+    chat_id: int
+    messages: list[Message] = Field(default_factory=list)
+    max_tokens: int = Field(config.openai.max_tokens, gt=300, lt=4000)
 
-    def _trim_context(self) -> int:
-        """Deletes messages if sum length exedess `max_length`.
+    def add_message(self, text: str, role: Role = Role.USER):
+        """Add a message to the chat.
+
+        Args:
+            text: The text of the message.
+            role: OpenAI chat role.
+        """
+        message = Message(content=text, role=role)
+        self.messages.append(message)
+        self._trim_context()
+
+    def model_post_init(self, __context) -> None:
+        """Initializes the context with the chatbot description."""
+        self.add_message(config.chatbot.description, Role.SYSTEM)
+
+    @staticmethod
+    def _get_num_tokens_from_string(string: str) -> int:
+        """Returns the number of tokens in a text string."""
+        return len(encoder.encode(string))
+
+    @classmethod
+    def _get_message_tokens_num(cls, message: Message) -> int:
+        """Returns the number of tokens in a message."""
+        tokens = cls._get_num_tokens_from_string(
+            f"{message.content}{message.role}"
+        )
+        tokens += 3  # Every reply is primed with <|start|>role<|message|>
+        return tokens
+
+    def _trim_context(self):
+        """Deletes messages if tokens sum exedess `max_tokens`.
 
         Trims the messages in the context to meet the maximum length specified
         in the context. If the length of the context exceeds the maximum
         length, it removes the oldest messages from the context until it
-        meets the length criteria.
+        meets the length criteria. If last message if above of `max_tokens`
+        then trim this message.
         """
         if not self.messages:
-            return 0
+            return
 
-        length = len(self.bot.role)
+        system_message = self.messages.pop(0)
+        tokens = self._get_message_tokens_num(system_message)
+
         for i, message in enumerate(reversed(self.messages)):
-            length += len(message)
-            if length > self.max_length:
+            tokens += self._get_message_tokens_num(message)
+            if tokens >= self.max_tokens:
                 wall = len(self.messages) - i
                 self.messages = self.messages[wall:]
-                return wall
-        return 0
 
-    def _next_message_id(self) -> int:
-        """Returns the next message ID.
+        self.messages.insert(0, system_message)
 
-        Returns:
-            The next message ID, which is the message ID of the last message in
-            the context plus 1, or 0 if the context has no messages yet.
-        """
-        return (
-            0 if len(self.messages) == 0 else self.messages[-1].message_id + 1
-        )
-
-    def _trim_message(self, message: Message):
-        """Trims long messages to the valid length.
-
-        Takes a Message object as input and returns the modified message
-        object with truncated text if the length of the message exceeds
-        the `max_length` parameter of the ``Context`` object.
-
-        Args:
-            message: A Message object that contains the text message
-                to be trimmed.
-
-        Returns:
-            The modified Message object.
-        """
-        if len(message) > self.max_length:
-            message.text = message.text[: self.max_length - 250]
-        return message
-
-    def add_message(self, author: User | Bot, text: str) -> int:
-        """Add a message to the context with the given author and text.
-
-        Args:
-            author: The author of the message.
-            text: The text of the message.
-
-        Returns:
-            The ID of the new message.
-        """
-        message = Message(
-            message_id=self._next_message_id(), author=author, text=text
-        )
-        message = self._trim_message(message)
-        self.messages.append(message)
-        self._trim_context()
-        return message.message_id
-
-    def _get_prompt(self) -> str:
+    async def _get_prompt(self):
         """Generates a prompt with using context and history messages.
 
-        Returns the prompt message based on the context history. The prompt
-        message is a string that includes the bot's role, dialog history
-        (previous messages).
+        Gets bot answer, adds to the `messages`.
 
         Returns:
             A string representing the prompt message for the current context.
         """
-        prompt_template = "{role}\n\n{dialog}\n{bot_name}: "
-        dialog = list(
-            map(lambda msg: msg.author.name + ": " + msg.text, self.messages)
-        )
-        return prompt_template.format(
-            role=self.bot.role,
-            dialog="\n".join(dialog),
-            bot_name=self.bot.name,
-        )
+        answer = await complete(self.messages)
+        self.add_message(answer, Role.ASSISTANT)
 
-    async def get_answer(self, openai_client: BaseOpenAIClient) -> Message:
-        """Requests OpenAI for an answer and add the answer to the `messages`.
+    async def get_answer(self, text: str) -> str:
+        """Requests OpenAI for an answer and add the answer to the `text`.
 
         Generates a message from the OpenAI API in response to the current
-        conversation context. The method takes an instance of an
-        openai.BaseOpenAIClient subclass as an argument and returns
-        a Message object.
+        conversation context.
 
         Args:
-            openai_client: An instance of an openai.BaseOpenAIClient subclass
-                that is used to generate a response to the current conversation
-                context.
+            text: User message text to answer.
 
         Returns:
-            A Message object that represents the response generated by
-            the OpenAI API.
+            OpenAI chat answer.
         """
-        prompt = self._get_prompt()
-        stop_word = self.user.name + ":"
-        answer_text = await openai_client.complete(prompt, stop_word)
-        self.add_message(self.bot, answer_text)
-        return self.messages[-1]
+        self.add_message(text, Role.USER)
+        await self._get_prompt()
+        return self.messages[-1].content
 
 
 class DialogStorage(ABC):
-    """Dialog Storage Interface for storing `Context` objects.
+    """Dialog Storage Interface for storing `Chat` objects.
 
     This is an abstract base class for a Dialog Storage, which defines
     the interface that a concrete Dialog Storage class must implement.
     The Dialog Storage is responsible for storing and retrieving
-    conversation contexts.
+    conversation contexts (chats).
     """
 
     @abstractmethod
-    async def add_context(self, context: Context) -> int:
+    async def add_chat(self, chat: Chat):
         """Adds a context to the storage and returns context id."""
         raise NotImplementedError
 
     @abstractmethod
-    async def get_context(self, context_id) -> Context:
+    async def get_chat(self, user_id: int, chat_id: int) -> Chat:
         """Gets a context from the storage and returns it."""
         raise NotImplementedError
 
@@ -205,28 +152,25 @@ class BaseDialogManager(ABC):
     """
 
     @abstractmethod
-    async def add_context(self, context: Context) -> int:
-        """Adds new context to the manager, returns context id."""
+    async def add_chat(self, chat: Chat):
+        """Adds new chat to the manager."""
         raise NotImplementedError
 
     @abstractmethod
-    async def chat(self, context_id: int, text: str) -> Message:
+    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
         """Gets answer from Open AI chatbot on `text` prompt."""
         raise NotImplementedError
 
 
 class DialogManager(BaseDialogManager):
-    def __init__(
-        self, openai_client: BaseOpenAIClient, dialog_storage: DialogStorage
-    ):
-        self.openai_client = openai_client
-        self.dialog_storage = dialog_storage
 
-    async def add_context(self, context: Context) -> int:
-        await self.dialog_storage.add_context(context)
+    def __init__(self, dialog_storage: DialogStorage):
+        self.dialog_storage: DialogStorage = dialog_storage
 
-    async def chat(self, context_id: int, text: str) -> Message:
+    async def add_chat(self, chat: Chat):
+        await self.dialog_storage.add_chat(chat)
+
+    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
         """Gets answer from Open AI chatbot on `text` prompt."""
-        context = await self.dialog_storage.get_context(context_id)
-        context.add_message(author=context.user, text=text)
-        return await context.get_answer(self.openai_client)
+        chat = await self.dialog_storage.get_chat(user_id, chat_id)
+        return await chat.get_answer(text)

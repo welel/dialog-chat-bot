@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field
 from .helpers import get_env_variable
 
 
+MAX_TELEGRAM_MESSAGE_LEN: int = 4096
+
+
 @dataclass
 class TelegramBot:
     token: str
@@ -48,14 +51,10 @@ class ChatBot:
     """Chatbot configuration.
 
     Attrs:
-        bot_character: The character being played by the AI.
-        user_character: The user name or character.
-        role: the context of the conversation.
+        description: The chatbot description.
     """
 
-    bot_character: str
-    user_character: str
-    role: str
+    description: str = Field(max_length=250)
 
 
 @dataclass
@@ -89,9 +88,7 @@ def load_config() -> Config:
     )
 
     chatbot: ChatBot = ChatBot(
-        bot_character=get_env_variable("BOT_CHARACTER"),
-        user_character=get_env_variable("USER_CHARACTER"),
-        role=get_env_variable("ROLE"),
+        description=get_env_variable("CHATBOT_DESCRIPTION"),
     )
 
     VOICES_DIRECTORY: str = os.path.join(BASE_DIR, "voice_files")
