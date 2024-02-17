@@ -116,7 +116,7 @@ class DictDialogStorage(DialogStorage):
                 f"Chat for {(user_id, chat_id)} doesn't exist.",
             )
 
-    def is_chat(self, user_id: int, chat_id: int) -> bool:
+    def is_chat_exists(self, user_id: int, chat_id: int) -> bool:
         return (user_id, chat_id) in self.chats
 
 
@@ -142,7 +142,7 @@ class TelegramDialogManager(DialogManager):
 
         Uses the telegram user_id, chat_id as a chat identifier.
         """
-        if self.dialog_storage.is_chat(user_id, chat_id):
+        if self.dialog_storage.is_chat_exists(user_id, chat_id):
             answer = await super().chat(user_id, chat_id, text)
         else:
             chat = Chat(user_id=user_id, chat_id=chat_id)
