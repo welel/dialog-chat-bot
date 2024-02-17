@@ -1,6 +1,5 @@
 """A module provides a function to complete a prompt with OpenAI's model."""
 import os
-import random as rand
 import logging
 from typing import Iterable
 
@@ -12,41 +11,6 @@ from config import ChatModel, configs
 
 client = AsyncOpenAI(api_key=configs.OPENAI_TOKEN)
 logger: logging.Logger = logging.getLogger(__name__)
-
-
-MESSAGES: dict[str, list[str]] = {
-    "nobother": [
-        "Today, I'm not in the mood for chatting. Please, don't bother me!",
-        "Today, I don't feel like sharing anything. Leave me be!",
-        "Today, nothing pleases me. I'm not listening to anyone!",
-        "Speed, speed - that's my philosophy! No lessons, no listening!",
-        "I'm occupied with my thoughts! Nobody should disturb me!",
-        "I am free! When I don't want to respond, I won't!",
-    ],
-    "noinput": [
-        "You need to say something, or we can't continue our conversation.",
-        "You need to input something, otherwise, there can be no dialogue.",
-        "You need to say something, or the chat can't be given attention.",
-        "You need to say something to keep the conversation going.",
-        "You have to say at least something.",
-    ],
-}
-
-
-def get_message(messages_key: str) -> str:
-    """Returns a random message from the `MESSAGES` dictionary.
-
-    Args:
-        messages_key: The key of the MESSAGES dictionary (gets a messages
-            list).
-
-    Returns:
-        str: A random message from the MESSAGES dictionary corresponding to
-             the given key. If a key or messages don't exists, returns "".
-    """
-    messages = MESSAGES.get(messages_key, [""])
-    message_index = rand.randint(0, len(messages) - 1)
-    return messages[message_index]
 
 
 async def complete(
