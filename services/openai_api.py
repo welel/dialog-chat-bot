@@ -1,6 +1,7 @@
 """A module provides a function to complete a prompt with OpenAI's model."""
-import logging
+import os
 import random as rand
+import logging
 from typing import Iterable
 
 from openai import AsyncOpenAI
@@ -101,24 +102,23 @@ async def complete(
     return message.strip()
 
 
-async def audio_to_text(file_path: str) -> str:
+async def audio_to_text(file_path: str, delete_file: bool = True) -> str:
     """Gets audio file path and returns transcribed text.
 
     Args:
         file_path: The audio file path to transcribe, in one of these formats:
             flac, mp3, mp4, mpeg, mpga, m4a, ogg, wav, or webm.
+        delete_file: Delete audio file after transcribition. Default: True.
 
     Returns:
         The transcription text of the audio file.
     """
-    try:
-        with open(file_path, "rb") as audio_file:
-            transcript = await client.audio.transcriptions.create(
-                model="whisper-1", file=audio_file
-            )
-            return transcript["text"]
-    except Exception as e:
-        if config.tg_bot.debug_mode:
-            return str(f"Error while transcripting: {e}")
-        else:
-            raise
+    with open(file_path, "rb") as audio_file:
+        transcript = await client.audio.transcriptions.create(
+            model="whisper-1", file=audio_file
+        )
+
+    if delete_file:
+        os.remove(file_path)
+
+    return transcript.text

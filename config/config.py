@@ -91,7 +91,7 @@ def load_config() -> Config:
         description=get_env_variable("CHATBOT_DESCRIPTION"),
     )
 
-    VOICES_DIRECTORY: str = os.path.join(BASE_DIR, "voice_files")
+    VOICES_DIRECTORY: str = os.path.join(BASE_DIR, "temp")
     if not os.path.isdir(VOICES_DIRECTORY):
         os.mkdir(VOICES_DIRECTORY)
 
