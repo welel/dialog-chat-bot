@@ -2,7 +2,7 @@ models:
 
   default:
     model: gpt-3.5-turbo
-    max_tokens: 3500
+    max_tokens: 100
 
   full_config_example:
     # API reference: https://platform.openai.com/docs/api-reference/chat
@@ -52,3 +52,11 @@ models:
     # Example message: "You are a helpful assistant.", instructs the model to behave as a helpful assistant,
     # influencing its tone, style, and the nature of its responses throughout the interaction.
     chatbot_description: You are a helpful assistant.
+
+    # [Optional] Defines the maximum number of tokens that can be used to maintain the context of a conversation, 
+    # set to 3500 by default. This limit includes both the user's inputs and the chatbot's responses, 
+    # where one token roughly equates to a word or a couple of characters in English. The chosen value directly 
+    # influences computational load and billing, as costs are calculated based on the total number of tokens processed. 
+    # Adjusting this parameter helps balance detailed conversational history with cost efficiency.
+    # Max value depends on chosen model, more details: https://platform.openai.com/docs/models/gpt-3-5-turbo (context window).
+    chatbot_max_context_len: 3500

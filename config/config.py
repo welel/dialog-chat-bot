@@ -47,6 +47,7 @@ class ChatModel(BaseModel):
             Defines the role the model should assume, influencing its
             responses. Should be concise, clear, and not exceed 250 characters.
             Example: "You are a helpful assistant."
+        chatbot_max_context_len: Max context window in tokens.
 
     """
 
@@ -60,6 +61,7 @@ class ChatModel(BaseModel):
     chatbot_description: str = Field(
         default="You are a helpful assistant.", max_length=250
     )
+    chatbot_max_context_len: int = Field(3500, gt=0, lt=16385)
 
     @classmethod
     def load_from_yaml_file(
@@ -90,7 +92,9 @@ class ChatModel(BaseModel):
 
     def get_openai_params(self) -> dict[str, Any]:
         """Returns kwargs params for the OpenAI `completions.create` method."""
-        return self.model_dump(exclude=("chatbot_description"))
+        return self.model_dump(exclude=(
+            "chatbot_description", "chatbot_max_context_len"
+        ))
 
 
 @dataclass

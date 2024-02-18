@@ -21,7 +21,12 @@ class Chat(BaseChat):
     Chat manages the messages history and makes request to OpenAI.
 
     """
-    max_tokens: int = chat_model.max_tokens
+
+    max_context_window: int = chat_model.chatbot_max_context_len
+    """Maxinum context window in tokens.
+
+    Old messages that exceed this windows will be removed.
+    """
 
     def add_message(self, text: str, role: Role = Role.USER):
         """Add a message to the chat.
@@ -63,7 +68,7 @@ class Chat(BaseChat):
 
         for i, message in enumerate(reversed(self.messages)):
             tokens += self._get_message_tokens_num(message)
-            if tokens >= self.max_tokens:
+            if tokens >= self.max_context_window:
                 wall = len(self.messages) - i
                 self.messages = self.messages[wall:]
 
