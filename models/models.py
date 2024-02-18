@@ -97,6 +97,16 @@ class Chat(BaseChat):
         logger.debug("Chat state: %s", self)
         return self.messages[-1].content
 
+    def __len__(self) -> int:
+        """Chat length in tokens."""
+        if not self.messages:
+            return 0
+
+        tokens = 0
+        for message in self.messages:
+            tokens += self._get_message_tokens_num(message)
+        return tokens
+
 
 class DictDialogStorage(DialogStorage):
     """Dialog Storage that stores context in Python dict."""
