@@ -6,7 +6,7 @@ from typing import Iterable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from config import ChatModel, configs
+from src.config import ChatModel, configs
 
 
 client = AsyncOpenAI(api_key=configs.OPENAI_TOKEN)

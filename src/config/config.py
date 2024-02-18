@@ -110,7 +110,7 @@ def load_config() -> Config:
     load_dotenv()
 
     # Common configuration
-    BASE_DIR: str = Path(__file__).resolve().parent.parent
+    BASE_DIR: str = Path(__file__).resolve().parent.parent.parent
 
     # Telegram bot configuration
     tg_bot: TelegramBot = TelegramBot(

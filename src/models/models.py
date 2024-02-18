@@ -2,10 +2,10 @@ import logging
 
 import tiktoken
 
-from config import configs
-from config.config import MAX_TELEGRAM_MESSAGE_LEN
-from errors.errors import ChatDoesNotExist
-from services.openai_api import complete
+from src.config import configs
+from src.config.config import MAX_TELEGRAM_MESSAGE_LEN
+from src.errors.errors import ChatDoesNotExist
+from src.services.openai_api import complete
 
 from .base import BaseChat, BaseDialogManager, DialogStorage, Role, Message
 

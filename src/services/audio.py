@@ -5,7 +5,7 @@ from aiogram import Bot
 from aiogram.types import Voice
 from pydub import AudioSegment
 
-from config import configs
+from src.config import configs
 
 
 async def save_voice_as_mp3(bot: Bot, voice: Voice) -> str:

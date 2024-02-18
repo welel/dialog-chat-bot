@@ -1,11 +1,11 @@
 from aiogram import Bot, F, Router
 from aiogram.types import Message
 
-from config import configs
-from models import TelegramDialogManager, DictDialogStorage
-from services.audio import save_voice_as_mp3
-from services.openai_api import audio_to_text
-from services.messages import SystemMessage, get_message
+from src.config import configs
+from src.models import TelegramDialogManager, DictDialogStorage
+from src.services.audio import save_voice_as_mp3
+from src.services.openai_api import audio_to_text
+from src.services.messages import SystemMessage, get_message
 
 
 router = Router()

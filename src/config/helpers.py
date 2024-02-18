@@ -1,6 +1,6 @@
 import os
 
-from errors.errors import ImproperlyConfigured
+from src.errors.errors import ImproperlyConfigured
 
 
 def get_env_variable(var_name: str, cast_to=str) -> str:
