@@ -51,21 +51,3 @@ class DialogStorage(ABC):
     async def get_chat(self, user_id: int, chat_id: int) -> BaseChat:
         """Gets a context from the storage and returns it."""
         raise NotImplementedError
-
-
-class BaseDialogManager(ABC):
-    """Dialog Manager Interface for making requests to OpenAI.
-
-    This is an abstract class that defines the interface for a Dialog Manager
-    that interacts with an Open AI chatbot.
-    """
-
-    @abstractmethod
-    async def add_chat(self, chat: BaseChat):
-        """Adds new chat to the manager."""
-        raise NotImplementedError
-
-    @abstractmethod
-    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
-        """Gets answer from Open AI chatbot on `text` prompt."""
-        raise NotImplementedError
