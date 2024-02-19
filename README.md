@@ -3,6 +3,10 @@
 
 This is a Python-based Telegram chatbot that uses the OpenAI API with **gpt-3.5-turbo-\*** models to provide conversational responses to users in a dialog context-aware manner.
 
+<p align="center">
+<img src="https://i.ibb.co/ft47CGF/dialog-chat-bot-cover.png" alt="dialog-chat-bot-cover" border="0" ></a>
+</p>
+
 You can easily configure the parameters of OpenAI models for the chatbot by using the `models.yml` file. This approach allows for quick adjustments of model settings such as `temperature`, `max_tokens`, `voice` and so on without altering the code. Simply edit the `models.yml` file to change the behavior and response style of your chatbot as needed.
 
 # 🔥 Features
