@@ -160,6 +160,8 @@ class DialogManager:
 
 
 class TelegramDialogManager(DialogManager):
+    """Manages `Chat` and `DialogStorage` together for telegram replies."""
+
     dialog_storage: DictDialogStorage
 
     async def get_or_create_chat(self, user_id: int, chat_id: int) -> Chat:
@@ -171,7 +173,7 @@ class TelegramDialogManager(DialogManager):
             await self.add_chat(chat)
         return chat
 
-    async def reply_on_message(
+    async def reply_on_text(
             self, message: TgMessage, text: str | None = None
     ) -> None:
         """"Sends chat model's answer by given telegram message.
@@ -208,6 +210,6 @@ class TelegramDialogManager(DialogManager):
         """
         voice_path = await save_voice_as_mp3(bot, message.voice)
         if transcripted_voice_text := await speech_to_text(voice_path):
-            await self.reply_on_message(message, text=transcripted_voice_text)
+            await self.reply_on_text(message, text=transcripted_voice_text)
         else:
             raise EmptyTrancriptionResult

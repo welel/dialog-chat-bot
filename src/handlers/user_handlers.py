@@ -19,7 +19,7 @@ async def process_text_message(message: Message):
         answer = get_message(SystemMessage.NO_INPUT)
         await message.reply(text=answer)
     else:
-        await dialog_manager.reply_on_message(message)
+        await dialog_manager.reply_on_text(message)
 
 
 @router.message(F.content_type == "voice")
