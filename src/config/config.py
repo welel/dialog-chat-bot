@@ -3,7 +3,7 @@ import logging
 import yaml
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from .helpers import get_env_variable
 
 
-MAX_TELEGRAM_MESSAGE_LEN: int = 4096
+MAX_TELEGRAM_MESSAGE_LEN: int = 4095
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -21,11 +21,11 @@ class TelegramBot:
     debug_mode: bool = False
 
 
-class ChatModel(BaseModel):
-    """OpenAI model configuration.
+class ModelConfig(BaseModel):
+    """Configuration for the GPT model used in chat completions.
 
-    Configures the chat model for generating completions with specific behavior
-    modifications and control over the output. Utilizes "gpt-3.5-turbo-*"
+    This class specifies the parameters to customize the behavior of the
+    GPT model for generating responses in a chat. Utilizes "gpt-3.5-turbo-*"
     for generating chat completions. More about parameters can be found
     in the docs: https://platform.openai.com/docs/api-reference/chat/create
 
@@ -42,26 +42,80 @@ class ChatModel(BaseModel):
             mass of the token distribution.
         stop: A list of strings where the model will stop generating further
             tokens. Useful for ending responses or avoiding certain topics.
-        chatbot_description: A system-generated message that sets the context
-            and behavior of the model at the start of the conversation.
-            Defines the role the model should assume, influencing its
-            responses. Should be concise, clear, and not exceed 250 characters.
-            Example: "You are a helpful assistant."
-        chatbot_max_context_len: Max context window in tokens.
 
     """
-
-    model: str = "gpt-3.5-turbo"
+    model: Literal[
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k",
+        "gpt-3.5-turbo-0125",
+        "gpt-3.5-turbo",
+        "gpt-3.5-turbo-0301",
+        "gpt-3.5-turbo-1106 ",
+    ] = "gpt-3.5-turbo"
     frequency_penalty: Optional[float] = Field(None, ge=-2.0, le=2.0)
     presence_penalty: Optional[float] = Field(None, ge=-2.0, le=2.0)
     max_tokens: int = Field(150, gt=0, lt=4095)
     temperature: Optional[float] = Field(None, ge=0.0, le=2.0)
     top_p: Optional[float] = Field(None, ge=0.0, le=1.0)
     stop: Optional[list[str]] = Field(default=None, max_items=4)
-    chatbot_description: str = Field(
+
+
+class VoiceConfig(BaseModel):
+    """Configuration for the voice synthesis model.
+
+    Specifies the text-to-speech (TTS) model and voice settings for generating
+    audio responses.
+
+    Attributes:
+        model: The TTS model to use. Choices are "tts-1" and "tts-1-hd".
+        voice: The voice ID for the audio generation.
+        speed: The speed of the voice playback.
+            Range: [0.25, 4.0], where 1.0 is the default speed.
+    """
+    model: Literal["tts-1", "tts-1-hd"] = "tts-1"
+    voice: Literal[
+        "alloy", "echo", "fable", "onyx", "nova", "shimmer"
+    ] = "alloy"
+    speed: float = Field(1.0, ge=0.25, le=4.0)
+
+
+class ChatbotConfig(BaseModel):
+    """Configuration for the chatbot's behavior and context.
+
+    Attributes:
+        description: A system-generated message that sets the context
+            and behavior of the model at the start of the conversation.
+            Defines the role the model should assume, influencing its
+            responses. Should be concise, clear, and not exceed 250 characters.
+            Example: "You are a helpful assistant."
+        max_context_len: Max context window in tokens.
+
+    """
+    description: str = Field(
         default="You are a helpful assistant.", max_length=250
     )
-    chatbot_max_context_len: int = Field(3500, gt=0, lt=16385)
+    max_context_len: int = Field(3500, gt=0, lt=16385)
+
+
+class ChatModel(BaseModel):
+    """Overall configuration for the chat model.
+
+    Including chat completions, voice synthesis, and chatbot behavior.
+    Combines settings for generating text responses, voice output,
+    and managing chat context.
+
+    Attributes:
+        chat_model: Configuration for the GPT model used in chat completions.
+        chatbot: Settings for the chatbot's behavior and context.
+        voice: Optional configuration for voice synthesis. If provided,
+            enables voice output.
+
+    """
+
+    chat_model: ModelConfig
+    chatbot: ChatbotConfig = Field(default_factory=ChatbotConfig)
+    voice: Optional[VoiceConfig] = None
 
     @classmethod
     def load_from_yaml_file(
@@ -90,11 +144,17 @@ class ChatModel(BaseModel):
                 )
             return cls(**model_config)
 
-    def get_openai_params(self) -> dict[str, Any]:
+    def get_openai_chat_params(self) -> dict[str, Any]:
         """Returns kwargs params for the OpenAI `completions.create` method."""
-        return self.model_dump(exclude=(
-            "chatbot_description", "chatbot_max_context_len"
-        ))
+        return self.chat_model.model_dump()
+
+    def get_openai_speech_params(self) -> dict[str, str | float]:
+        """Returns kwargs params for the OpenAI `speech.create` method."""
+        return self.voice.model_dump()
+
+    @property
+    def is_voice_mode(self) -> bool:
+        return isinstance(self.voice, VoiceConfig)
 
 
 @dataclass

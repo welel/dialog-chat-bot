@@ -1,17 +1,21 @@
 import logging
+import uuid
 
+from aiogram import Bot
+from aiogram.types import BufferedInputFile, Message as TgMessage
 import tiktoken
 
 from src.config import configs
 from src.config.config import MAX_TELEGRAM_MESSAGE_LEN
-from src.errors.errors import ChatDoesNotExist
-from src.services.openai_api import complete
+from src.errors.errors import ChatDoesNotExist, EmptyTrancriptionResult
+from src.services.audio import save_voice_as_mp3
+from src.services.openai_api import complete, text_to_speech, speech_to_text
 
-from .base import BaseChat, BaseDialogManager, DialogStorage, Role, Message
+from .base import BaseChat, DialogStorage, Role, Message
 
 
 chat_model = configs.chat_model
-encoder = tiktoken.encoding_for_model(chat_model.model)
+encoder = tiktoken.encoding_for_model(chat_model.chat_model.model)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +26,7 @@ class Chat(BaseChat):
 
     """
 
-    max_context_window: int = chat_model.chatbot_max_context_len
+    max_context_window: int = chat_model.chatbot.max_context_len
     """Maxinum context window in tokens.
 
     Old messages that exceed this windows will be removed.
@@ -35,30 +39,28 @@ class Chat(BaseChat):
             text: The text of the message.
             role: OpenAI chat role.
         """
-        message = Message(content=text, role=role)
-        self.messages.append(message)
+        self.messages.append(Message(content=text, role=role))
         self._trim_context()
 
     def model_post_init(self, __context) -> None:
         """Initializes the context with the chatbot description."""
-        self.add_message(chat_model.chatbot_description, Role.SYSTEM)
+        self.add_message(chat_model.chatbot.description, Role.SYSTEM)
 
     @classmethod
     def _get_message_tokens_num(cls, message: Message) -> int:
         """Returns the number of tokens in a message."""
         message_as_str = f"{message.content}{message.role}"
-        tokens = len(encoder.encode(message_as_str))
-        tokens += 3  # Every reply is primed with <|start|>role<|message|>
-        return tokens
+        # Every reply is primed with <|start|>role<|message|>, so add 3 tokens.
+        return len(encoder.encode(message_as_str)) + 3
 
     def _trim_context(self):
-        """Deletes messages if tokens sum exedess `max_tokens`.
+        """Deletes messages if tokens sum exedess `max_context_window`.
 
         Trims the messages in the context to meet the maximum length specified
         in the context. If the length of the context exceeds the maximum
         length, it removes the oldest messages from the context until it
-        meets the length criteria. If last message if above of `max_tokens`
-        then trim this message.
+        meets the length criteria. If last messages if above of the window
+        then trim these messages.
         """
         if not self.messages:
             return
@@ -74,19 +76,20 @@ class Chat(BaseChat):
 
         self.messages.insert(0, system_message)
 
-    async def _get_prompt(self):
+    async def _generate_bot_answer(self) -> str:
         """Generates a prompt with using context and history messages.
 
         Gets bot answer, adds to the `messages`.
 
         Returns:
-            A string representing the prompt message for the current context.
+            A string response from the model.
         """
         answer = await complete(self.messages, chat_model)
         self.add_message(answer, Role.ASSISTANT)
+        return answer
 
     async def get_answer(self, text: str) -> str:
-        """Requests OpenAI for an answer and add the answer to the `text`.
+        """Requests OpenAI for an answer and returns it.
 
         Generates a message from the OpenAI API in response to the current
         conversation context.
@@ -95,12 +98,17 @@ class Chat(BaseChat):
             text: User message text to answer.
 
         Returns:
-            OpenAI chat answer.
+            OpenAI chat model answer.
         """
         self.add_message(text, Role.USER)
-        await self._get_prompt()
+        answer = await self._generate_bot_answer()
         logger.debug("Chat state: %s", self)
-        return self.messages[-1].content
+        return answer
+
+    async def get_audio_answer(self, text: str) -> bytes:
+        """Requests OpenAI for an answer and returns it as audio bytes."""
+        answer = await self.get_answer(text)
+        return await text_to_speech(answer, chat_model)
 
     def __len__(self) -> int:
         """Chat length in tokens."""
@@ -132,35 +140,76 @@ class DictDialogStorage(DialogStorage):
             )
 
     def is_chat_exists(self, user_id: int, chat_id: int) -> bool:
+        """Checks wheather the chat exists in the storage."""
         return (user_id, chat_id) in self.chats
 
 
-class DialogManager(BaseDialogManager):
+class DialogManager:
+    """Manages `Chat` and `DialogStorage` together."""
 
     def __init__(self, dialog_storage: DialogStorage):
         self.dialog_storage: DialogStorage = dialog_storage
 
     async def add_chat(self, chat: Chat):
+        """Adds a chat to the manager's storage."""
         await self.dialog_storage.add_chat(chat)
 
-    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
-        """Gets answer from Open AI chatbot on `text` prompt."""
-        chat = await self.dialog_storage.get_chat(user_id, chat_id)
-        return await chat.get_answer(text)
+    async def get_chat(self, user_id: int, chat_id: int) -> Chat:
+        """Gets a chat from the manager's storage and returns it."""
+        return await self.dialog_storage.get_chat(user_id, chat_id)
 
 
 class TelegramDialogManager(DialogManager):
+    """Manages `Chat` and `DialogStorage` together for telegram replies."""
+
     dialog_storage: DictDialogStorage
 
-    async def chat(self, user_id: int, chat_id: int, text: str) -> str:
-        """Gets answer from Open AI chatbot on `text` prompt.
-
-        Uses the telegram user_id, chat_id as a chat identifier.
-        """
+    async def get_or_create_chat(self, user_id: int, chat_id: int) -> Chat:
+        """Gets a chat from the manager's storage (creates if don't exists)."""
         if self.dialog_storage.is_chat_exists(user_id, chat_id):
-            answer = await super().chat(user_id, chat_id, text)
+            chat = await super().get_chat(user_id, chat_id)
         else:
             chat = Chat(user_id=user_id, chat_id=chat_id)
             await self.add_chat(chat)
-            answer = await super().chat(user_id, chat_id, text)
-        return answer[:MAX_TELEGRAM_MESSAGE_LEN - 1]
+        return chat
+
+    async def reply_on_text(
+            self, message: TgMessage, text: str | None = None
+    ) -> None:
+        """"Sends chat model's answer by given telegram message.
+
+        Args:
+            message: A telegram message.
+            text: Prompt text to use. If None use text from the given message.
+        """
+        message_text = text or message.text
+        chat = await self.get_or_create_chat(
+            message.from_user.id, message.chat.id
+        )
+
+        if chat_model.is_voice_mode:
+            response = await chat.get_audio_answer(message_text)
+            voice_file = BufferedInputFile(
+                response, filename=f"{uuid.uuid4}.mp3"
+            )
+            await message.answer_voice(voice_file)
+        else:
+            answer = await chat.get_answer(message_text)
+            answer = answer[:MAX_TELEGRAM_MESSAGE_LEN]
+            await message.reply(text=answer)
+
+    async def reply_on_voice(self, message: TgMessage, bot: Bot) -> None:
+        """"Sends chat model's answer by given telegram voice message.
+
+        Args:
+            message: A telegram message.
+            bot: Current telegram bot.
+
+        Raises:
+            EmptyTrancriptionResult: OpenAI transciption got empty result.
+        """
+        voice_path = await save_voice_as_mp3(bot, message.voice)
+        if transcripted_voice_text := await speech_to_text(voice_path):
+            await self.reply_on_text(message, text=transcripted_voice_text)
+        else:
+            raise EmptyTrancriptionResult

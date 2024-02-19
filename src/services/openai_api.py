@@ -27,7 +27,7 @@ async def complete(
     """
     try:
         completion = await client.chat.completions.create(
-            messages=messages, **chat_model.get_openai_params()
+            messages=messages, **chat_model.get_openai_chat_params()
         )
     except Exception as e:
         logger.exception(
@@ -38,7 +38,25 @@ async def complete(
     return message.strip()
 
 
-async def audio_to_text(file_path: str, delete_file: bool = True) -> str:
+async def text_to_speech(text: str, chat_model: ChatModel) -> bytes:
+    """Gets text to translate and a chat model to use, returns audio bytes.
+
+    Args:
+        text: Text to turn into audio speech. Max len: 4096.
+        chat_model: Chat model to use for the translation.
+
+    Returns:
+        Return audio file as bytes.
+    """
+    max_input_len = 4096
+    text = text[:max_input_len]
+    response = await client.audio.speech.create(
+        **chat_model.get_openai_speech_params(), input=text
+    )
+    return response.read()
+
+
+async def speech_to_text(file_path: str, delete_file: bool = True) -> str:
     """Gets audio file path and returns transcribed text.
 
     Args:

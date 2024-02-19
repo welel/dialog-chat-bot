@@ -1,62 +1,87 @@
 models:
 
   default:
-    model: gpt-3.5-turbo
-    max_tokens: 100
+    chat_model:
+      model: gpt-3.5-turbo
+      max_tokens: 100
+    chatbot:
+      description: You are a helpful assistant.
+      max_context_len: 1000
+    # Uncomment to enable voice output.
+    # voice:
+    #   model: tts-1
+    #   voice: nova
 
   full_config_example:
-    # API reference: https://platform.openai.com/docs/api-reference/chat
 
-    # Specifies the model ID to use for generating chat completions.
-    # Available models:
-    #  - gpt-3.5-turbo-16k-0613
-    #  - gpt-3.5-turbo-0613
-    #  - gpt-3.5-turbo-16k
-    #  - gpt-3.5-turbo-0125
-    #  - gpt-3.5-turbo
-    #  - gpt-3.5-turbo-0301
-    #  - gpt-3.5-turbo-1106 
-    model: gpt-3.5-turbo
+    chat_model:
+      # API reference: https://platform.openai.com/docs/api-reference/chat
 
-    # [Required] Limits the maximum number of tokens in the model's response. This helps control the length of the output.
-    max_tokens: 150
+      # Specifies the model ID to use for generating chat completions.
+      # Available models:
+      #  - gpt-3.5-turbo-16k-0613
+      #  - gpt-3.5-turbo-0613
+      #  - gpt-3.5-turbo-16k
+      #  - gpt-3.5-turbo-0125
+      #  - gpt-3.5-turbo
+      #  - gpt-3.5-turbo-0301
+      #  - gpt-3.5-turbo-1106 
+      model: gpt-3.5-turbo
 
-    # [Optional] Adjusts the likelihood of generating new tokens based on their frequency in the text so far.
-    # A value of 0 means no frequency-based adjustments are made. Values can range from -2.0 to 2.0,
-    # where positive values decrease the likelihood of repeating tokens.
-    frequency_penalty: 0
+      # [Required] Limits the maximum number of tokens in the model's response. This helps control the length of the output.
+      max_tokens: 150
 
-    # [Optional] Adjusts the likelihood of generating new tokens based on their presence in the text so far.
-    # A value of 0 means no presence-based adjustments are made, allowing for repetition of topics.
-    # Values can range from -2.0 to 2.0, where positive values encourage the model to introduce new topics.
-    presence_penalty: 0
+      # [Optional] Adjusts the likelihood of generating new tokens based on their frequency in the text so far.
+      # A value of 0 means no frequency-based adjustments are made. Values can range from -2.0 to 2.0,
+      # where positive values decrease the likelihood of repeating tokens.
+      frequency_penalty: 0
 
-    # [Optional] Controls the randomness of the output. A value of 1 provides a balance between randomness and determinism.
-    # Lower values (towards 0) make the model's output more deterministic and predictable.
-    # Higher values (up to 2) increase randomness, making outputs more varied and less predictable.
-    temperature: 1
+      # [Optional] Adjusts the likelihood of generating new tokens based on their presence in the text so far.
+      # A value of 0 means no presence-based adjustments are made, allowing for repetition of topics.
+      # Values can range from -2.0 to 2.0, where positive values encourage the model to introduce new topics.
+      presence_penalty: 0
 
-    # [Optional] An alternative to temperature, controls the model's output by only considering the top P% probability mass of the token distribution.
-    # A value of 1 considers all tokens equally, regardless of their probability.
-    # Lower values (towards 0) focus the model on the most likely tokens, reducing randomness.
-    # Setting this to a very low value can make the model's output highly predictable.
-    top_p: 1
+      # [Optional] Controls the randomness of the output. A value of 1 provides a balance between randomness and determinism.
+      # Lower values (towards 0) make the model's output more deterministic and predictable.
+      # Higher values (up to 2) increase randomness, making outputs more varied and less predictable.
+      temperature: 1
 
-    # [Optional] Specifies sequences where the model will stop generating further tokens.
-    # Useful for signaling the model to end responses or avoid certain topics. Up to 4 words.
-    stop: ["word1", "word2"]
+      # [Optional] An alternative to temperature, controls the model's output by only considering the top P% probability mass of the token distribution.
+      # A value of 1 considers all tokens equally, regardless of their probability.
+      # Lower values (towards 0) focus the model on the most likely tokens, reducing randomness.
+      # Setting this to a very low value can make the model's output highly predictable.
+      top_p: 1
 
-    # [Optional] This is a system-generated message that sets the context and behavior of the model at the start of the conversation.
-    # It defines the role the model should assume, guiding its responses and interactions.
-    # The content of this message should be concise and clear, not exceeding 250 characters, to effectively communicate the intended persona or function the model is to adopt.
-    # Example message: "You are a helpful assistant.", instructs the model to behave as a helpful assistant,
-    # influencing its tone, style, and the nature of its responses throughout the interaction.
-    chatbot_description: You are a helpful assistant.
+      # [Optional] Specifies sequences where the model will stop generating further tokens.
+      # Useful for signaling the model to end responses or avoid certain topics. Up to 4 words.
+      stop: ["word1", "word2"]
 
-    # [Optional] Defines the maximum number of tokens that can be used to maintain the context of a conversation, 
-    # set to 3500 by default. This limit includes both the user's inputs and the chatbot's responses, 
-    # where one token roughly equates to a word or a couple of characters in English. The chosen value directly 
-    # influences computational load and billing, as costs are calculated based on the total number of tokens processed. 
-    # Adjusting this parameter helps balance detailed conversational history with cost efficiency.
-    # Max value depends on chosen model, more details: https://platform.openai.com/docs/models/gpt-3-5-turbo (context window).
-    chatbot_max_context_len: 3500
+    voice:
+      # Add this configuration to enable voice answers. Bot's answers sends as voice messages.
+      # API reference: https://platform.openai.com/docs/api-reference/audio/createSpeech
+
+      # [Required] One of the available text-to-speech models: tts-1 or tts-1-hd.
+      model: tts-1
+
+      # [Required] The voice to use when generating the audio.
+      # Supported voices: alloy, echo, fable, onyx, nova, shimmer.
+      voice: nova
+
+      # [Optional] Defaults to 1. The speed of the generated audio, ranging from 0.25 to 4.0.
+      speed: 1
+
+    chatbot:
+      # [Optional] This is a system-generated message that sets the context and behavior of the model at the start of the conversation.
+      # It defines the role the model should assume, guiding its responses and interactions.
+      # The content of this message should be concise and clear, not exceeding 250 characters, to effectively communicate the intended persona or function the model is to adopt.
+      # Example message: "You are a helpful assistant.", instructs the model to behave as a helpful assistant,
+      # influencing its tone, style, and the nature of its responses throughout the interaction.
+      description: You are a helpful assistant.
+
+      # [Optional] Defines the maximum number of tokens that can be used to maintain the context of a conversation, 
+      # set to 3500 by default. This limit includes both the user's inputs and the chatbot's responses, 
+      # where one token roughly equates to a word or a couple of characters in English. The chosen value directly 
+      # influences computational load and billing, as costs are calculated based on the total number of tokens processed. 
+      # Adjusting this parameter helps balance detailed conversational history with cost efficiency.
+      # Max value depends on chosen model, more details: https://platform.openai.com/docs/models/gpt-3-5-turbo (context window).
+      max_context_len: 3500

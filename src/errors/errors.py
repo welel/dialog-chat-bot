@@ -1,5 +1,5 @@
 class ImproperlyConfigured(Exception):
-    """Raises when a environment variable is missing."""
+    """An environment variable is missing."""
 
     def __init__(self, variable_name: str, *args, **kwargs):
         self.variable_name = variable_name
@@ -8,4 +8,8 @@ class ImproperlyConfigured(Exception):
 
 
 class ChatDoesNotExist(Exception):
-    """Raises when a chat is missing in a storage."""
+    """A chat is missing in a storage."""
+
+
+class EmptyTrancriptionResult(Exception):
+    """A trancription result is an empty string."""

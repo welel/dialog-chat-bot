@@ -3,28 +3,30 @@
 
 This is a Python-based Telegram chatbot that uses the OpenAI API with **gpt-3.5-turbo-\*** models to provide conversational responses to users in a dialog context-aware manner.
 
-You can easily configure the parameters of OpenAI models for the chatbot by using the `models.yml` file. This approach allows for quick adjustments of model settings such as `temperature`, `max_tokens`, and `presence_penalty` without altering the code. Simply edit the `models.yml` file to change the behavior and response style of your chatbot as needed.
+You can easily configure the parameters of OpenAI models for the chatbot by using the `models.yml` file. This approach allows for quick adjustments of model settings such as `temperature`, `max_tokens`, `voice` and so on without altering the code. Simply edit the `models.yml` file to change the behavior and response style of your chatbot as needed.
 
 # 🔥 Features
 
 - Provides conversational responses to user input, using OpenAI API.
 - Ability to easily configure multiple models and choose between them.
+- Supports voice input (processes speech to text using OpenAI Whisper model).
+- Supports voice output (processes texts to peech using OpenAI TTS model).
 - Can handle multiple conversations with different users simultaneously.
-- Supports voice input (processes to text and sends to the model).
 
 # 🛠️ Requirements
 
 - Python 3.11+
 - ffmpeg
+- OpenAI account and positive account balance. New users get $5.
 
-# :running: Quick Start
+# 🏃 Quick Start
 
 1. **Install the Bot**: Choose between a local installation or using Docker. See the Installation section for detailed steps.
 2. **Interact with Your Bot**: Once the bot is up and running, open Telegram and start sending messages to your bot's Telegram handle.
 
 # 🏗️ Installation
 
-### Local
+## Local
 
 - Clone or download the repository.
 
@@ -81,7 +83,7 @@ You can easily configure the parameters of OpenAI models for the chatbot by usin
     python bot.py
     ```
 
-### Docker
+## Docker
 
 - Install Docker and Docker Compose ([link](https://medium.com/@pavel.loginov.dev/how-to-easily-install-docker-and-compose-on-ubuntu-5423e8a64259) if you don’t know how).
 
@@ -108,9 +110,11 @@ The chatbot uses configurations specified in the `models.yml` file to tailor its
 
 The `models.yml` file in the project directory contains configurations for different models or scenarios. Here's how to configure it:
 
-1. **Selecting a Model**: Under the `models` key, you can define multiple configurations. Each configuration can specify a different OpenAI model. For example, the `default` configuration uses `gpt-3.5-turbo` with a `max_tokens` limit of 100. You need to set a model config name in the environment variable `MODEL_CONFIG_NAME` to select the config.
-    
-2. **Customizing Behavior**:
+1. **Selecting a Model**: Under the `models` key, you can define multiple configurations. 
+
+    Each configuration can specify a different OpenAI model. For example, the `default` configuration uses `gpt-3.5-turbo` with a `max_tokens` limit of 100. You need to set a model config name in the environment variable `MODEL_CONFIG_NAME` to select the config.
+        
+2. **Configuring OpenAI chat model (`chat_model` section)**:
     
     - **Model ID**: Choose the appropriate model ID for your use case. Available options include various versions of the `gpt-3.5-turbo` model, each with different capabilities and context window sizes.
     - **Max Tokens**: This required setting controls the output length by limiting the maximum number of tokens the model generates.
@@ -119,10 +123,19 @@ The `models.yml` file in the project directory contains configurations for diffe
     - **Temperature**: Control the randomness of responses. Lower values result in more predictable text, while higher values increase diversity.
     - **Top P**: An alternative to temperature, focusing the model on the most probable tokens or a broader set, depending on the value.
     - **Stop**: Define specific sequences that signal the model to stop generating further tokens, useful for managing the flow of conversation.
-    - **Chatbot Description**: Set a context or role for the chatbot at the beginning of the conversation, guiding its responses and style.
-	- **Context Length**: The `chatbot_max_context_len` parameter defines the total number of tokens (user inputs and bot responses) considered in a single conversation window. Adjusting this helps manage the detail of conversational history and can impact computational requirements and billing.
 
-# :bow: Troubleshooting
+3. **Configuring chatbot behaviour (`chatbot` section)**:
+
+    - **Description**: Set a context or role for the chatbot at the beginning of the conversation, guiding its responses and style.
+	- **Length**: The `max_context_len` parameter defines the total number of tokens (user inputs and bot responses) considered in a single conversation window. Adjusting this helps manage the detail of conversational history and can impact computational requirements and billing.
+
+4. **Configuring bot's voice (`voice` section)**:
+
+    - **Model**: Choose between available text-to-speech (TTS) models to define the quality and characteristics of the voice output. Options include tts-1 for standard quality and tts-1-hd for high definition audio. This setting determines the base technology for voice synthesis.
+    - **Voice**: Select the specific voice identity to use from the supported options: `alloy`, `echo`, `fable`, `onyx`, `nova`, and `shimmer`. Each voice has a unique tone and style.
+    - **Speed**: Adjust the playback speed of the generated audio, with a range from 0.25 (slower) to 4.0 (faster). The default setting is 1, representing normal speed.
+
+# 🙇 Troubleshooting
 
 - **Voice Message Issues**: If the bot fails to process voice messages, ensure ffmpeg is installed on the host machine. Check the bot's logs for any error messages related to voice processing.
 - **Access Restrictions**: Users in certain regions, such as Russia, may encounter blocks when trying to access OpenAI services, resulting in the bot returning an HTML error page. To circumvent this, configure a VPN on your hosting machine or consider hosting the bot in a different geographical location where OpenAI services are available.
