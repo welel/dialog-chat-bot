@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from .helpers import get_env_variable
 
 
-MAX_TELEGRAM_MESSAGE_LEN: int = 4096
+MAX_TELEGRAM_MESSAGE_LEN: int = 4095
 logger: logging.Logger = logging.getLogger(__name__)
 
 

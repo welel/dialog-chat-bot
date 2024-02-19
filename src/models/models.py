@@ -193,7 +193,7 @@ class TelegramDialogManager(DialogManager):
             await message.answer_voice(voice_file)
         else:
             answer = await chat.get_answer(message_text)
-            answer = answer[:MAX_TELEGRAM_MESSAGE_LEN - 1]
+            answer = answer[:MAX_TELEGRAM_MESSAGE_LEN]
             await message.reply(text=answer)
 
     async def reply_on_voice(self, message: TgMessage, bot: Bot) -> None:
