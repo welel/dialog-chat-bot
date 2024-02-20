@@ -14,7 +14,7 @@ You can easily configure the parameters of OpenAI models for the chatbot by usin
 - Provides conversational responses to user input, using OpenAI API.
 - Ability to easily configure multiple models and choose between them.
 - Supports voice input (processes speech to text using OpenAI Whisper model).
-- Supports voice output (processes texts to peech using OpenAI TTS model).
+- Supports voice output (processes text to speech using OpenAI TTS model).
 - Can handle multiple conversations with different users simultaneously.
 
 # 🛠️ Requirements
@@ -26,7 +26,7 @@ You can easily configure the parameters of OpenAI models for the chatbot by usin
 # 🏃 Quick Start
 
 1. **Install the Bot**: Choose between a local installation or using Docker. See the Installation section for detailed steps.
-2. **Interact with Your Bot**: Once the bot is up and running, open Telegram and start sending messages to your bot's Telegram handle.
+2. **Interact with Your Bot**: Once the bot is up and running, open Telegram and start sending messages to your bot.
 
 # 🏗️ Installation
 
